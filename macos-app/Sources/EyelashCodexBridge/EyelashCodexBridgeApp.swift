@@ -37,7 +37,7 @@ final class BridgeModel: ObservableObject {
 
         let context = Unmanaged.passUnretained(self).toOpaque()
         IOHIDManagerRegisterDeviceMatchingCallback(manager, { context, _, _, device in
-            guard let context, let device else { return }
+            guard let context else { return }
             let model = Unmanaged<BridgeModel>.fromOpaque(context).takeUnretainedValue()
             model.attach(device)
         }, context)
@@ -168,7 +168,7 @@ struct BridgeMenu: View {
                         Text(event.key).font(.system(.body, design: .monospaced))
                         Spacer()
                         Text(event.pressed ? "按下" : "松开")
-                            .foregroundStyle(event.pressed ? .primary : .secondary)
+                            .foregroundColor(event.pressed ? .primary : .secondary)
                         Text(event.timestamp, style: .time)
                             .font(.caption2)
                             .foregroundStyle(.secondary)
