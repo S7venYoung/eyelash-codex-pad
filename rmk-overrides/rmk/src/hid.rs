@@ -292,7 +292,6 @@ impl AsInputReport for CodexReport {
     }
 )]
 #[allow(dead_code)]
-#[derive(Default)]
 pub struct BleCompositeReport {
     pub(crate) modifier: u8,
     pub(crate) reserved: u8,
@@ -308,6 +307,27 @@ pub struct BleCompositeReport {
     pub(crate) codex_input: [u8; 63],
     pub(crate) codex_output: [u8; 63],
     pub(crate) codex_feature: [u8; 63],
+}
+
+impl Default for BleCompositeReport {
+    fn default() -> Self {
+        Self {
+            modifier: 0,
+            reserved: 0,
+            leds: 0,
+            keycodes: [0; 6],
+            buttons: 0,
+            x: 0,
+            y: 0,
+            wheel: 0,
+            pan: 0,
+            media_usage_id: 0,
+            system_usage_id: 0,
+            codex_input: [0; 63],
+            codex_output: [0; 63],
+            codex_feature: [0; 63],
+        }
+    }
 }
 
 #[cfg(all(test, feature = "_ble"))]
