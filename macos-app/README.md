@@ -4,7 +4,8 @@ A native macOS 13+ menu-bar host for the Eyelash Codex Pad. It discovers both
 the experimental pad (`4C4B:4643`) and the official Codex Micro identity
 (`303A:8360`), listens to Vendor HID Report ID 6, parses `v.oai.hid` events,
 and shows the latest events without a terminal window. Version 0.2 also reads
-the pad's existing standard keyboard reports, so no firmware flash is required.
+the pad's existing standard keyboard HID elements, so no firmware flash or
+assumption about the firmware's report ID/layout is required.
 
 ## Install
 
