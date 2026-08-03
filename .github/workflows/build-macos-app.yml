@@ -1,0 +1,37 @@
+name: Build macOS app
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "macos-app/**"
+      - ".github/workflows/build-macos-app.yml"
+  pull_request:
+    paths:
+      - "macos-app/**"
+      - ".github/workflows/build-macos-app.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-14
+    strategy:
+      fail-fast: false
+      matrix:
+        architecture: [arm64, x86_64]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and package ${{ matrix.architecture }} app
+        run: bash macos-app/package-app.sh ${{ matrix.architecture }}
+
+      - name: Upload app
+        uses: actions/upload-artifact@v4
+        with:
+          name: Eyelash-Codex-Bridge-${{ matrix.architecture }}
+          path: macos-app/dist/${{ matrix.architecture }}/Eyelash-Codex-Bridge-${{ matrix.architecture }}.zip
+          if-no-files-found: error
