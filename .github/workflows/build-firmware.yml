@@ -10,6 +10,23 @@ permissions:
   contents: read
 
 jobs:
+  test-freemicro-patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download pinned FreeMicro source
+        run: |
+          mkdir -p /tmp/freemicro
+          curl --fail --location --silent --show-error \
+            https://github.com/eliBenven/freemicro/archive/64258eb6cc3312a43f9f9f86d87e55e0b609ccc5.tar.gz \
+            | tar -xz -C /tmp/freemicro --strip-components=1
+
+      - name: Apply and verify compatibility patch
+        run: |
+          python3 freemicro/patch_freemicro.py /tmp/freemicro
+          python3 freemicro/patch_freemicro.py --check /tmp/freemicro
+
   build:
     runs-on: ubuntu-latest
     strategy:
@@ -67,4 +84,3 @@ jobs:
           path: |
             ${{ matrix.path }}/eyelash-numpad.hex
             ${{ matrix.path }}/eyelash-numpad.uf2
-
