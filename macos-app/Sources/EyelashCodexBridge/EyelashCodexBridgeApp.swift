@@ -7,7 +7,32 @@ struct PadEvent: Identifiable {
     let id = UUID()
     let key: String
     let pressed: Bool
+    let source: String
     let timestamp: Date
+}
+
+enum KeyboardActionMap {
+    static let shiftMask: UInt8 = 0x02 | 0x20
+
+    static func action(usage: UInt8, modifiers: UInt8) -> String? {
+        let shifted = modifiers & shiftMask != 0
+        if shifted {
+            switch usage {
+            case 0x68: return "ACT12"  // Shift + F13
+            case 0x69: return "ENC_CC" // Shift + F14
+            case 0x6A: return "ENC_CW" // Shift + F15
+            default: return nil
+            }
+        }
+
+        let actions = [
+            "AG00", "AG01", "AG02", "AG03", "AG04", "AG05",
+            "ACT06", "ACT07", "ACT08", "ACT09", "ACT10", "ACT11",
+        ]
+        let index = Int(usage) - 0x68 // HID keyboard usages F13 ... F24
+        guard actions.indices.contains(index) else { return nil }
+        return actions[index]
+    }
 }
 
 final class BridgeModel: ObservableObject {
@@ -15,9 +40,11 @@ final class BridgeModel: ObservableObject {
     @Published var productName = "Eyelash Codex Pad"
     @Published var events: [PadEvent] = []
     @Published var lastError: String?
+    @Published var inputMode = "等待输入"
 
     private let manager: IOHIDManager
     private let reportBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: 64)
+    private var keyboardPressed: [UInt8: String] = [:]
 
     init() {
         manager = IOHIDManagerCreate(kCFAllocatorDefault, IOOptionBits(kIOHIDOptionsTypeNone))
@@ -90,6 +117,10 @@ final class BridgeModel: ObservableObject {
     }
 
     private func receive(reportID: UInt32, bytes: UnsafeMutablePointer<UInt8>, count: CFIndex) {
+        if reportID == 1 {
+            receiveKeyboard(bytes: bytes, count: count)
+            return
+        }
         guard reportID == 6, count >= 3 else { return }
         let data = Data(bytes: bytes, count: count)
         var offset = 0
@@ -111,19 +142,59 @@ final class BridgeModel: ObservableObject {
             else { return }
 
             DispatchQueue.main.async {
-                let event = PadEvent(key: key, pressed: action != 0, timestamp: Date())
-                self.events.insert(event, at: 0)
-                if self.events.count > 20 { self.events.removeLast() }
-                DistributedNotificationCenter.default().postNotificationName(
-                    Notification.Name("com.s7venyoung.eyelash-codex-bridge.event"),
-                    object: nil,
-                    userInfo: ["key": key, "pressed": action != 0],
-                    deliverImmediately: true
-                )
+                self.inputMode = "Vendor HID"
+                self.publish(key: key, pressed: action != 0, source: "Vendor HID")
             }
         } catch {
             DispatchQueue.main.async { self.lastError = "无法解析设备事件：\(error.localizedDescription)" }
         }
+    }
+
+    private func receiveKeyboard(bytes: UnsafeMutablePointer<UInt8>, count: CFIndex) {
+        let data = Data(bytes: bytes, count: count)
+        var offset = 0
+        if data.count >= 9, data.first == 1 { offset = 1 }
+        guard data.count >= offset + 8 else { return }
+
+        let modifiers = data[offset]
+        let usages = Set(data[(offset + 2)..<(offset + 8)].filter { $0 != 0 })
+
+        // Keep the action chosen at key-down time so modifier release ordering
+        // in a Vial macro cannot turn a release into a different action.
+        for usage in usages where keyboardPressed[usage] == nil {
+            guard let action = KeyboardActionMap.action(usage: usage, modifiers: modifiers) else {
+                continue
+            }
+            keyboardPressed[usage] = action
+            DispatchQueue.main.async {
+                self.inputMode = "Vial 键盘"
+                self.publish(key: action, pressed: true, source: "Vial")
+            }
+        }
+
+        let released = keyboardPressed.filter { !usages.contains($0.key) }
+        for (usage, action) in released {
+            keyboardPressed.removeValue(forKey: usage)
+            // Encoder turns are protocol ticks and intentionally have no release.
+            if !action.hasPrefix("ENC_") {
+                DispatchQueue.main.async {
+                    self.inputMode = "Vial 键盘"
+                    self.publish(key: action, pressed: false, source: "Vial")
+                }
+            }
+        }
+    }
+
+    private func publish(key: String, pressed: Bool, source: String) {
+        let event = PadEvent(key: key, pressed: pressed, source: source, timestamp: Date())
+        events.insert(event, at: 0)
+        if events.count > 20 { events.removeLast() }
+        DistributedNotificationCenter.default().postNotificationName(
+            Notification.Name("com.s7venyoung.eyelash-codex-bridge.event"),
+            object: nil,
+            userInfo: ["key": key, "pressed": pressed, "source": source],
+            deliverImmediately: true
+        )
     }
 
     func clearEvents() {
@@ -147,6 +218,9 @@ struct BridgeMenu: View {
                     Text(model.productName)
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                    Text("输入：\(model.inputMode)")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
                 }
                 Spacer()
             }
@@ -169,6 +243,9 @@ struct BridgeMenu: View {
                         Spacer()
                         Text(event.pressed ? "按下" : "松开")
                             .foregroundColor(event.pressed ? .primary : .secondary)
+                        Text(event.source)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
                         Text(event.timestamp, style: .time)
                             .font(.caption2)
                             .foregroundStyle(.secondary)
