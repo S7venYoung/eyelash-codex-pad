@@ -39,10 +39,10 @@ pub(crate) struct VialService {
     #[characteristic(uuid = "2a4e", read, write_without_response, value = 1)]
     pub(crate) protocol_mode: u8,
     #[descriptor(uuid = "2908", read, value = [0u8, 1u8])]
-    #[characteristic(uuid = "2a4d", read, notify)]
+    #[characteristic(uuid = "2a4d", read, notify, value = [0u8; 63])]
     pub(crate) input_data: [u8; 32],
     #[descriptor(uuid = "2908", read, value = [0u8, 2u8])]
-    #[characteristic(uuid = "2a4d", read, write, write_without_response)]
+    #[characteristic(uuid = "2a4d", read, write, write_without_response, value = [0u8; 63])]
     pub(crate) output_data: [u8; 32],
 }
 
@@ -90,7 +90,7 @@ pub(crate) struct HidService {
     #[characteristic(uuid = "2a4d", read, write, write_without_response)]
     pub(crate) codex_output: [u8; 63],
     #[descriptor(uuid = "2908", read, value = [6u8, 3u8])]
-    #[characteristic(uuid = "2a4d", read, write)]
+    #[characteristic(uuid = "2a4d", read, write, value = [0u8; 63])]
     pub(crate) codex_feature: [u8; 63],
 }
 
