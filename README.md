@@ -9,6 +9,7 @@ macropad, built on RMK.
 - `firmware/codex`: experimental BLE Vendor HID build.
 - `rmk-overrides`: the small RMK fork surface used by the Codex build.
 - `freemicro`: one-command FreeMicro compatibility installer and verifier.
+- `macos-app`: native menu-bar HID host, built entirely by GitHub Actions.
 - `.github/workflows/build-firmware.yml`: builds both variants and uploads
   `.hex` and `.uf2` artifacts.
 
@@ -54,6 +55,15 @@ bash freemicro/setup.sh
 
 See [`freemicro/README.md`](freemicro/README.md) for permissions, limitations,
 and patch verification details.
+
+## Native macOS app
+
+The repository also includes **Eyelash Codex Bridge**, a macOS 13+ menu-bar
+app that discovers the pad, decodes Report ID 6 events, shows recent activity,
+and can launch at login. Download the Apple-silicon or Intel artifact from the
+latest **Build macOS app** workflow run. See
+[`macos-app/README.md`](macos-app/README.md) for installation and the precise
+scope of this first milestone.
 
 ## Downloading firmware
 
