@@ -8,7 +8,11 @@ let package = Package(
         .executable(name: "EyelashCodexBridge", targets: ["EyelashCodexBridge"])
     ],
     targets: [
-        .executableTarget(name: "EyelashCodexBridge")
+        .executableTarget(name: "EyelashCodexBridge"),
+        .testTarget(
+            name: "EyelashCodexBridgeTests",
+            dependencies: ["EyelashCodexBridge"]
+        ),
     ],
     swiftLanguageVersions: [.v5]
 )
