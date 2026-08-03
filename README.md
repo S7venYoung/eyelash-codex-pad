@@ -8,6 +8,7 @@ macropad, built on RMK.
 - `firmware/original`: untouched firmware baseline supplied with the pad.
 - `firmware/codex`: experimental BLE Vendor HID build.
 - `rmk-overrides`: the small RMK fork surface used by the Codex build.
+- `freemicro`: one-command FreeMicro compatibility installer and verifier.
 - `.github/workflows/build-firmware.yml`: builds both variants and uploads
   `.hex` and `.uf2` artifacts.
 
@@ -41,6 +42,19 @@ an **input-only prototype**. It does not impersonate OpenAI's VID/PID and is not
 claimed to be recognized directly by the ChatGPT desktop app. A bridge must be
 configured to accept this firmware's own VID/PID.
 
+## FreeMicro compatibility
+
+The included compatibility patch keeps support for the official Codex Micro
+and adds the Eyelash firmware's `4C4B:4643` identity. On macOS, run:
+
+```bash
+bash freemicro/setup.sh
+./.venv-freemicro/bin/freemicro keys --dry-run
+```
+
+See [`freemicro/README.md`](freemicro/README.md) for permissions, limitations,
+and patch verification details.
+
 ## Downloading firmware
 
 Open the latest GitHub Actions run, then download either:
@@ -62,4 +76,3 @@ Each artifact contains an Intel HEX file and an nRF52832 UF2 file.
 
 - [RMK](https://github.com/HaoboGu/rmk)
 - [FreeMicro](https://github.com/eliBenven/freemicro)
-
