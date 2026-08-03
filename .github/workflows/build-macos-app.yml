@@ -16,7 +16,16 @@ permissions:
   contents: read
 
 jobs:
+  test:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test Vial key mapping
+        working-directory: macos-app
+        run: swift test
+
   build:
+    needs: test
     runs-on: macos-14
     strategy:
       fail-fast: false
