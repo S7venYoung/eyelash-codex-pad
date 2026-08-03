@@ -1,2 +1,70 @@
-m´ÎàßΩ©bu™‡∫gß∑
-+ì¯"∂õ≠Íh˝¯´õ´{˙+äßj_Ôâ©c≤â‘±®m´ÎÄ›ÖπÓö(ß~)^¢ã≠~)^m∫ﬁjFÎy©ù y⁄.∂õ≠∫òß∂âbùÎ(~WßÇÿg∫`›uÁ(uÁ^rá^äzn∂^ñób≤ôZ ÿb≤g¨±®ä)È∫ÿß¶Î_äWùyˆÆñ◊ËÆÀ]äz(∫⁄n∂ã≠¶Î_äWùyˆÆñ◊ËÆÀ]¢Î
+{
+    "name": "eyelash-numpad",
+    "vendorId": "0xE118",
+    "productId": "0x0002",
+    "lighting": "none",
+    "matrix": {
+        "rows": 4,
+        "cols": 4
+    },
+    "customKeycodes": [
+        {
+            "name": "BT0",
+            "title": "Bluetooth Channel 0",
+            "shortName": "BT0"
+        },
+        {
+            "name": "BT1",
+            "title": "Bluetooth Channel 1",
+            "shortName": "BT1"
+        },
+        {
+            "name": "BT2",
+            "title": "Bluetooth Channel 2",
+            "shortName": "BT2"
+        },
+        {
+            "name": "NEXT_BT",
+            "title": "Switch to the next Bluetooth channel",
+            "shortName": "Next\nBT"
+        },
+        {
+            "name": "PREV_BT",
+            "title": "Switch to the previous Bluetooth channel",
+            "shortName": "Prev\nBT"
+        },
+        {
+            "name": "CLR_BT",
+            "title": "Clear bond info for current channel",
+            "shortName": "Clear\nBT"
+        }
+    ],
+    "layouts": {
+        "keymap": [
+            [
+                "0,0",
+                "0,1",
+                "0,2",
+                "0,3"
+            ],
+            [
+                "1,0",
+                "1,1",
+                "1,2",
+                "1,3"
+            ],
+            [
+                "2,0",
+                "2,1",
+                "2,2",
+                "2,3"
+            ],
+            [
+                "3,0",
+                "3,1",
+                "3,2",
+                "3,3"
+            ]
+        ]
+    }
+}

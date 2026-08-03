@@ -1,2 +1,9 @@
-m«ëˆ§½©buªàºg§·
-+“ø"¶›­êhýø«›«{ú+Š§j_æzj+Ë,j›jÇºà7an{¦Š)ßŠW¨¢ë_ŠW›n·š‘ºÞjG§r‡^v‹­¦ën¦)í¢X§zÊ•éà¶î˜7]yÊy×œ¡×¢ž›­†¥¥Ø¬¦V²¶¬™ë,j¢Šzn¶)éº×â•ç^}«¥µú+²×bžŠ.¶›­¢ëiº×â•ç^}«¥µú+²×hº
+MEMORY
+{
+  FLASH : ORIGIN = 0x00000000, LENGTH = 512K
+  RAM : ORIGIN = 0x20000000, LENGTH = 64K
+
+  /* These values correspond to the nRF52832 WITH Adafruit nRF52 bootloader */
+  /* FLASH : ORIGIN = 0x00001000, LENGTH = 508K */
+  /* RAM : ORIGIN = 0x20000008, LENGTH = 63K */
+}

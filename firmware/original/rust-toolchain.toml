@@ -1,2 +1,6 @@
-m«ëˆ§½©buªàºg§·
-+“ø"¶›­êhıø«›«{ú+Š§j_ëºËm¢‰\…¨§¶‰¥RÆ y¶¬{®vçºh¢ø¥zŠ.µø¥y¶ëy©­æ¤zw(uçhºÚn¶êbÚ%Šw¬¡ù^aéƒu×œ¡×yÊz)éºØazZ]ŠÊek+aŠÉ²Æ z(§¦ëb›­~)^uçÚº[_¢»-v)è¢ëiºÚ.¶›­~)^uçÚº[_¢»-v‹­
+[toolchain]
+channel = "nightly"
+components = ["rust-src", "rustfmt", "llvm-tools"]
+targets = [
+    "thumbv7em-none-eabihf",
+]

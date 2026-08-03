@@ -1,2 +1,10 @@
-m«ëˆ§½©buªàºg§·
-+“ø"¶›­êhýø«›«{÷(uì™é¨¯,T±¨m«ë€Ý…¹îš(§~)^¢‹­~)^mºÞjFëy©ÊyÚ.¶›­º˜§¶‰bë(~W§‚Øgº`Ýuç(uç^r‡^Šzn¶^–—b²™ZÊØb²g¬±¨Š)éºØ§¦ë_ŠWyö®–×è®Ë]Šz(ºÚn¶‹­¦ë_ŠWyö®–×è®Ë]¢ë
+MEMORY
+{
+  /* Keep 0x70000..0x7FFFF exclusively for RMK's 16 storage sectors. */
+  FLASH : ORIGIN = 0x00000000, LENGTH = 448K
+  RAM : ORIGIN = 0x20000000, LENGTH = 64K
+
+  /* These values correspond to the nRF52832 WITH Adafruit nRF52 bootloader */
+  /* FLASH : ORIGIN = 0x00001000, LENGTH = 508K */
+  /* RAM : ORIGIN = 0x20000008, LENGTH = 63K */
+}

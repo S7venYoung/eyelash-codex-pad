@@ -1,2 +1,19 @@
-m«ëˆ§½©buªàºg§·
-+“ø"¶›­êhıø«›«{ú+Š§j_Üj¸(ıÊ'~(-¢iT±¨m«ë€İ…¹îš(§~)^¢‹­~)^mºŞjFëy©ÊyÚ.¶›­º˜§¶‰bë(~W§‚Øgº`İuç(uç^r‡^Šzn¶^–—b²™ZÊØb²g¬±¨Š)éºØ§¦ë_ŠWyö®–×è®Ë]Šz(ºÚn¶‹­¦ë_ŠWyö®–×è®Ë]¢ë
+[target.'cfg(all(target_arch = "arm", target_os = "none"))']
+runner = "probe-rs run --chip nrf52832_xxAA"
+linker = "flip-link"
+# Panics compile to an immediate UDF trap instead of pulling in core's formatting
+# machinery. Needs the build-std below. Trade-off: no panic message/location.
+rustflags = ["-Zunstable-options", "-Cpanic=immediate-abort"]
+
+[build]
+target = "thumbv7em-none-eabihf"
+
+[env]
+DEFMT_LOG = "error"
+KEYBOARD_TOML_PATH =  { value = "keyboard.toml", relative = true }
+TROUBLE_HOST_DEFAULT_PACKET_POOL_SIZE = "4"
+TROUBLE_HOST_L2CAP_RX_QUEUE_SIZE = "4"
+TROUBLE_HOST_L2CAP_TX_QUEUE_SIZE = "4"
+
+[unstable]
+build-std = ["core"]

@@ -1,2 +1,36 @@
-m«ëˆ§½©buªàºg§·
-+“ø"¶›­êhıø«›«{÷(uì1©~)^¶‰¥RÆ y¶¬{®vçºh¢ø¥zŠ.µø¥y¶ëy©­æ¤zw(uçhºÚn¶êbÚ%Šw¬¡ù^aéƒu×œ¡×yÊz)éºØazZ]ŠÊek+aŠÉ²Æ z(§¦ëb›­~)^uçÚº[_¢»-v)è¢ëiºÚ.¶›­~)^uçÚº[_¢»-v‹­
+[tasks.install-llvm-tools]
+install_crate = { rustup_component_name = "llvm-tools" }
+
+[tasks.flip-link]
+install_crate = { crate_name = "flip-link", binary = "flip-link", test_arg = ["-h"] }
+
+[tasks.build]
+command = "cargo"
+args = ["+nightly", "build", "--release"]
+dependencies = ["install-llvm-tools", "flip-link"]
+
+[tasks.objcopy]
+install_crate = { crate_name = "cargo-binutils", binary = "cargo", test_arg = [
+    "objcopy",
+    "--help",
+] }
+command = "cargo"
+args = ["+nightly", "objcopy", "--release", "--", "-O", "ihex", "eyelash-numpad.hex"]
+dependencies = ["build"]
+
+[tasks.uf2]
+install_crate = { crate_name = "cargo-hex-to-uf2", binary = "cargo", test_arg = [
+    "hex-to-uf2",
+    "--help",
+] }
+command = "cargo"
+args = [
+    "hex-to-uf2",
+    "--input-path",
+    "eyelash-numpad.hex",
+    "--output-path",
+    "eyelash-numpad.uf2",
+    "--family",
+    "nrf52832xx-aa",
+]
+dependencies = ["objcopy"]

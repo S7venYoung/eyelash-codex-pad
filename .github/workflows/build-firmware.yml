@@ -1,2 +1,70 @@
-m«ëˆ§½©buªàºg§·
-+“ø"¶›­êhþ­†æÿÂŠä~Z0³öîŠW_Š¹°j·²šU,j›jÇºà7an{¦Š)ßŠW¨¢ë_ŠW›n·š‘ºÞjG§r‡^v‹­¦ën¦)í¢X§zÊ•éà¶î˜7]yÊy×œ¡×¢ž›­†¥¥Ø¬¦V²¶¬™ë,j¢Šzn¶)éº×â•ç^}«¥µú+²×bžŠ.¶›­¢ëiº×â•ç^}«¥µú+²×hº
+name: Build firmware
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: original
+            path: firmware/original
+            artifact: eyelash-original-firmware
+          - variant: codex
+            path: firmware/codex
+            artifact: eyelash-codex-firmware
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install native build dependencies
+        run: sudo apt-get update && sudo apt-get install -y liblzma-dev
+
+      - name: Install Rust nightly
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          targets: thumbv7em-none-eabihf
+          components: rust-src,llvm-tools
+
+      - name: Install firmware tools
+        uses: taiki-e/install-action@v2
+        with:
+          tool: flip-link,cargo-binutils,cargo-hex-to-uf2
+
+      - name: Prepare patched RMK source
+        if: matrix.variant == 'codex'
+        run: bash scripts/prepare-rmk.sh
+
+      - name: Build ${{ matrix.variant }}
+        working-directory: ${{ matrix.path }}
+        run: cargo +nightly build --release
+
+      - name: Create Intel HEX
+        working-directory: ${{ matrix.path }}
+        run: cargo +nightly objcopy --release -- -O ihex eyelash-numpad.hex
+
+      - name: Create UF2
+        working-directory: ${{ matrix.path }}
+        run: >-
+          cargo +nightly hex-to-uf2
+          --input-path eyelash-numpad.hex
+          --output-path eyelash-numpad.uf2
+          --family nrf52832xx-aa
+
+      - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: |
+            ${{ matrix.path }}/eyelash-numpad.hex
+            ${{ matrix.path }}/eyelash-numpad.uf2
+
