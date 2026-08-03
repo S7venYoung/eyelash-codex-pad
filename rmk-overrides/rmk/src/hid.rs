@@ -199,7 +199,7 @@ pub struct CompositeReport {
 }
 
 /// Payload for the Report ID 6 BLE input characteristic.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct CodexReport {
     pub data: [u8; 63],
 }
@@ -280,13 +280,13 @@ impl AsInputReport for CodexReport {
         };
     },
     (collection = APPLICATION, usage_page = 0xFF00, usage = 0x01) = {
-        (report_id = 0x06, usage = 0x02, logical_min = 0x00, logical_max = 0xFF) = {
+        (report_id = 0x06, usage = 0x02, logical_min = 0x00) = {
             #[item_settings(data,array,absolute)] codex_input=input;
         };
-        (usage = 0x03, logical_min = 0x00, logical_max = 0xFF) = {
+        (usage = 0x03, logical_min = 0x00) = {
             #[item_settings(data,array,absolute)] codex_output=output;
         };
-        (usage = 0x04, logical_min = 0x00, logical_max = 0xFF) = {
+        (usage = 0x04, logical_min = 0x00) = {
             #[item_settings(data,array,absolute)] codex_feature=feature;
         };
     }
