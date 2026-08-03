@@ -45,6 +45,7 @@ final class BridgeModel: ObservableObject {
     private let manager: IOHIDManager
     private let reportBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: 64)
     private var keyboardPressed: [UInt8: String] = [:]
+    private var keyboardModifiers: UInt8 = 0
 
     init() {
         manager = IOHIDManagerCreate(kCFAllocatorDefault, IOOptionBits(kIOHIDOptionsTypeNone))
@@ -74,6 +75,11 @@ final class BridgeModel: ObservableObject {
             DispatchQueue.main.async {
                 model.connected = false
             }
+        }, context)
+        IOHIDManagerRegisterInputValueCallback(manager, { context, result, _, value in
+            guard let context, result == kIOReturnSuccess else { return }
+            let model = Unmanaged<BridgeModel>.fromOpaque(context).takeUnretainedValue()
+            model.receiveKeyboardValue(value)
         }, context)
 
         IOHIDManagerScheduleWithRunLoop(manager, CFRunLoopGetMain(), CFRunLoopMode.defaultMode.rawValue)
@@ -117,10 +123,6 @@ final class BridgeModel: ObservableObject {
     }
 
     private func receive(reportID: UInt32, bytes: UnsafeMutablePointer<UInt8>, count: CFIndex) {
-        if reportID == 1 {
-            receiveKeyboard(bytes: bytes, count: count)
-            return
-        }
         guard reportID == 6, count >= 3 else { return }
         let data = Data(bytes: bytes, count: count)
         var offset = 0
@@ -150,31 +152,37 @@ final class BridgeModel: ObservableObject {
         }
     }
 
-    private func receiveKeyboard(bytes: UnsafeMutablePointer<UInt8>, count: CFIndex) {
-        let data = Data(bytes: bytes, count: count)
-        var offset = 0
-        if data.count >= 9, data.first == 1 { offset = 1 }
-        guard data.count >= offset + 8 else { return }
+    private func receiveKeyboardValue(_ value: IOHIDValue) {
+        let element = IOHIDValueGetElement(value)
+        guard IOHIDElementGetUsagePage(element) == 0x07 else { return }
+        let usage = UInt8(truncatingIfNeeded: IOHIDElementGetUsage(element))
+        let pressed = IOHIDValueGetIntegerValue(value) != 0
 
-        let modifiers = data[offset]
-        let usages = Set(data[(offset + 2)..<(offset + 8)].filter { $0 != 0 })
-
-        // Keep the action chosen at key-down time so modifier release ordering
-        // in a Vial macro cannot turn a release into a different action.
-        for usage in usages where keyboardPressed[usage] == nil {
-            guard let action = KeyboardActionMap.action(usage: usage, modifiers: modifiers) else {
-                continue
+        // Keyboard usages E1/E5 are left/right Shift. Vial macros send these
+        // as ordinary HID element changes, independently of the F-key value.
+        if usage == 0xE1 || usage == 0xE5 {
+            let mask: UInt8 = usage == 0xE1 ? 0x02 : 0x20
+            if pressed {
+                keyboardModifiers |= mask
+            } else {
+                keyboardModifiers &= ~mask
             }
+            return
+        }
+
+        guard (0x68...0x73).contains(usage) else { return }
+        if pressed {
+            guard keyboardPressed[usage] == nil,
+                  let action = KeyboardActionMap.action(
+                    usage: usage,
+                    modifiers: keyboardModifiers
+                  ) else { return }
             keyboardPressed[usage] = action
             DispatchQueue.main.async {
                 self.inputMode = "Vial 键盘"
                 self.publish(key: action, pressed: true, source: "Vial")
             }
-        }
-
-        let released = keyboardPressed.filter { !usages.contains($0.key) }
-        for (usage, action) in released {
-            keyboardPressed.removeValue(forKey: usage)
+        } else if let action = keyboardPressed.removeValue(forKey: usage) {
             // Encoder turns are protocol ticks and intentionally have no release.
             if !action.hasPrefix("ENC_") {
                 DispatchQueue.main.async {
