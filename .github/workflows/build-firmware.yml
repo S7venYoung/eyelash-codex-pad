@@ -25,18 +25,40 @@ jobs:
       image: zmkfirmware/zmk-build-arm:stable
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/cache/restore@v4
+        id: west-cache
+        with:
+          path: |
+            zmk/
+            zephyr/
+            modules/
+            tools/
+            zmk-feature-*/
+            zmk-module-*/
+          key: eyelash-west-v1-${{ hashFiles('config/west.yml') }}
       - name: Fetch pinned DYA core and modules
         run: |
           west init -l config
           west update --fetch-opt=--filter=tree:0
           west zephyr-export
+      - uses: actions/cache/save@v4
+        if: steps.west-cache.outputs.cache-hit != 'true'
+        with:
+          path: |
+            zmk/
+            zephyr/
+            modules/
+            tools/
+            zmk-feature-*/
+            zmk-module-*/
+          key: eyelash-west-v1-${{ hashFiles('config/west.yml') }}
       - name: Apply checked BLE Studio fix
         run: python3 scripts/prepare_zmk.py zmk
       - name: Build nRF52832 DYA application
         run: >-
           west build -s zmk/app -d build/eyelash -b eyelash_numpad/nrf52832 --
-          -DZMK_CONFIG=${{ github.workspace }}/config
-          -DZMK_EXTRA_MODULES=${{ github.workspace }}
+          -DZMK_CONFIG="$(pwd)/config"
+          -DZMK_EXTRA_MODULES="$(pwd)"
       - name: Collect application and build evidence
         run: |
           mkdir -p dist/app dist/build-evidence
