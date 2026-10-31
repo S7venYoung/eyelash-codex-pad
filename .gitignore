@@ -1,6 +1,11 @@
-target/
-vendor/
-*.hex
-*.uf2
-.DS_Store
-
+.deps/
+.venv/
+__pycache__/
+build/
+dist/
+.west/
+zmk/
+zephyr/
+modules/
+tools/
+bootloader-upstream/

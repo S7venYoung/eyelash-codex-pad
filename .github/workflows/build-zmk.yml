@@ -1,0 +1,105 @@
+name: Build Eyelash DYA ZMK and BLE DFU
+
+# All firmware builds require an explicit manual dispatch.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  host-checks:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements-test.txt
+      - run: python -m unittest discover -s tests -v
+
+  zmk:
+    needs: host-checks
+    runs-on: ubuntu-24.04
+    container:
+      image: zmkfirmware/zmk-build-arm:stable
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned DYA core and modules
+        run: |
+          west init -l config
+          west update --fetch-opt=--filter=tree:0
+          west zephyr-export
+      - name: Apply checked BLE Studio fix
+        run: python3 scripts/prepare_zmk.py zmk
+      - name: Build nRF52832 DYA application
+        run: >-
+          west build -s zmk/app -d build/eyelash -b eyelash_numpad/nrf52832 --
+          -DZMK_CONFIG=${{ github.workspace }}/config
+          -DZMK_EXTRA_MODULES=${{ github.workspace }}
+      - name: Collect application and build evidence
+        run: |
+          mkdir -p dist/app dist/build-evidence
+          cp build/eyelash/zephyr/zmk.hex dist/app/eyelash-numpad-zmk.hex
+          cp build/eyelash/zephyr/zmk.elf dist/build-evidence/
+          cp build/eyelash/zephyr/.config dist/build-evidence/zephyr.config
+          cp build/eyelash/zephyr/zephyr.dts dist/build-evidence/
+          find build/eyelash/zephyr -maxdepth 1 -name '*.map' -exec cp {} dist/build-evidence/ \;
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eyelash-zmk-app
+          path: dist/app/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eyelash-numpad-build-evidence
+          path: dist/build-evidence/
+          if-no-files-found: error
+
+  bootloader:
+    needs: host-checks
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install ARM compiler
+        run: sudo apt-get update && sudo apt-get install -y gcc-arm-none-eabi libnewlib-arm-none-eabi
+      - name: Build pinned nRF52832 bootloader
+        run: bash scripts/build_bootloader.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eyelash-numpad-bootloader
+          path: dist/bootloader/*.hex
+          if-no-files-found: error
+
+  package:
+    needs: [zmk, bootloader]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements-dfu.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: eyelash-zmk-app
+          path: incoming/app
+      - uses: actions/download-artifact@v4
+        with:
+          name: eyelash-numpad-bootloader
+          path: incoming/boot
+      - name: Validate layout and create OTA/SWD artifacts
+        run: >-
+          python scripts/firmware_artifacts.py
+          --application incoming/app/eyelash-numpad-zmk.hex
+          --bootloader incoming/boot/eyelash-numpad-bootloader-s132.hex
+          --output dist/release
+      - run: cp README.md dist/release/README.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eyelash-numpad-zmk-swd-and-ble-dfu
+          path: dist/release/
+          if-no-files-found: error

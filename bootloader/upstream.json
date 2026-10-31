@@ -1,0 +1,13 @@
+{
+  "repository": "https://github.com/adafruit/Adafruit_nRF52_Bootloader.git",
+  "revision": "c67f0bcf0fa8e841426335b1bbde91cda6ca1f50",
+  "board": "eyelash_numpad",
+  "softdevice": "s132_nrf52_6.1.1",
+  "softdevice_id": 183,
+  "application_start": 155648,
+  "application_end": 446464,
+  "bootloader_start": 475136,
+  "mbr_params": 516096,
+  "bootloader_settings": 520192,
+  "flash_end": 524288
+}

@@ -1,0 +1,9 @@
+/ {
+    behaviors {
+        eyelash_dfu: eyelash_dfu {
+            compatible = "eyelash,behavior-dfu";
+            #binding-cells = <0>;
+            display-name = "Bluetooth DFU";
+        };
+    };
+};

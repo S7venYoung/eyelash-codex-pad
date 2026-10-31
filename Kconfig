@@ -1,0 +1,6 @@
+config ZMK_BEHAVIOR_EYELASH_DFU
+    bool "Eyelash nRF52832 Bluetooth DFU entry"
+    default y
+    depends on SOC_NRF52832_QFAA && DT_HAS_EYELASH_BEHAVIOR_DFU_ENABLED
+    help
+      Request the paired Adafruit S132 bootloader using GPREGRET 0xA8.

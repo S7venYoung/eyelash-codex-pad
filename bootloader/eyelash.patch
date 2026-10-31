@@ -1,0 +1,74 @@
+diff --git a/Makefile b/Makefile
+index 5866d15..9e774de 100644
+--- a/Makefile
++++ b/Makefile
+@@ -351,7 +351,10 @@ endif
+ 
+ # Defined Symbol (MACROS)
+ CFLAGS += -D__HEAP_SIZE=0
++# Eyelash reset-button wiring is not documented; preserve its UICR mapping.
++ifneq ($(BOARD),eyelash_numpad)
+ CFLAGS += -DCONFIG_GPIO_AS_PINRESET
++endif
+ 
+ # Skip defining CONFIG_NFCT_PINS_AS_GPIOS if the device uses the NFCT.
+ ifneq ($(USE_NFCT),yes)
+diff --git a/src/boards/boards.c b/src/boards/boards.c
+index c02a278..c6d04fa 100644
+--- a/src/boards/boards.c
++++ b/src/boards/boards.c
+@@ -377,6 +377,7 @@ static uint32_t secondary_cycle_length;
+ #endif
+ 
+ void led_tick(void) {
++#if LEDS_NUMBER > 0
+   uint32_t millis = _systick_count;
+ 
+   uint32_t cycle = millis % primary_cycle_length;
+@@ -402,6 +403,7 @@ void led_tick(void) {
+   #endif
+   led_pwm_duty_cycle(LED_SECONDARY, duty_cycle);
+   #endif
++#endif // LEDS_NUMBER > 0
+ }
+ 
+ static uint32_t rgb_color;
+diff --git a/src/main.c b/src/main.c
+index c988ee4..2602244 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -254,8 +254,14 @@ static void check_dfu_mode(void) {
+ 
+   bool const reason_reset_pin = (NRF_POWER->RESETREAS & POWER_RESETREAS_RESETPIN_Msk) ? true : false;
+ 
++#ifdef EYELASH_NUMPAD
++  bool const matrix_dfu = eyelash_matrix_dfu_requested();
++#else
++  bool const matrix_dfu = false;
++#endif
++
+   // start either serial, uf2 or ble
+-  bool dfu_start = _ota_dfu || serial_only_dfu || uf2_dfu ||
++  bool dfu_start = matrix_dfu || _ota_dfu || serial_only_dfu || uf2_dfu ||
+                    (((*dbl_reset_mem) == DFU_DBL_RESET_MAGIC) && reason_reset_pin);
+ 
+   // Clear GPREGRET if it is our values
+@@ -264,7 +270,7 @@ static void check_dfu_mode(void) {
+   }
+ 
+   // skip dfu entirely
+-  if (dfu_skip) {
++  if (dfu_skip && !matrix_dfu) {
+     return;
+   }
+ 
+@@ -302,7 +308,9 @@ static void check_dfu_mode(void) {
+     /* Even DFU is not active, we still force an 1000 ms dfu serial mode when startup
+      * to support auto programming from Arduino IDE
+      * Note: Double Reset WONT work with nrf52832 since all its SRAM got cleared with GPIO reset. */
++#ifndef EYELASH_NUMPAD
+     bootloader_dfu_start(false, DFU_SERIAL_STARTUP_INTERVAL, false);
++#endif
+ #else
+     // Note: RESETREAS is not clear by bootloader, it should be cleared by application upon init()
+     if (reason_reset_pin) {

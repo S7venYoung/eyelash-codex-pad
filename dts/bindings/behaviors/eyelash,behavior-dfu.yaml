@@ -1,0 +1,3 @@
+description: Enter the Eyelash nRF52832 bootloader in Bluetooth DFU mode
+compatible: "eyelash,behavior-dfu"
+include: zero_param.yaml

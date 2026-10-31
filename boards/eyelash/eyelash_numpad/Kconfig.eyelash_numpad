@@ -1,0 +1,3 @@
+config BOARD_EYELASH_NUMPAD
+    select SOC_NRF52832_QFAA
+    select ZMK_BOARD_COMPAT

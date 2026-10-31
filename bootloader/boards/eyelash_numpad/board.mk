@@ -1,0 +1,5 @@
+# Upstream calls the nRF52832 variant "nrf52".
+MCU_SUB_VARIANT = nrf52
+SD_VERSION = 6.1.1
+DEFAULT_TO_OTA_DFU = 1
+CFLAGS += -DEYELASH_NUMPAD -DDEVICE_NAME='"Eyelash_DFU"'

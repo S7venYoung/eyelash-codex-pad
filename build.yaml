@@ -1,0 +1,3 @@
+include:
+  - board: eyelash_numpad/nrf52832
+    artifact-name: eyelash-numpad-zmk
