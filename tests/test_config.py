@@ -29,7 +29,7 @@ class ConfigTests(unittest.TestCase):
                 continue
             with self.subTest(path=path):
                 self.assertIsInstance(yaml.safe_load(path.read_text()), dict)
-        workflow = yaml.safe_load((ROOT / ".github/workflows/build-zmk.yml").read_text())
+        workflow = yaml.safe_load((ROOT / ".github/workflows/build-firmware.yml").read_text())
         triggers = workflow.get("on", workflow.get(True))  # YAML 1.1 'on' alias
         self.assertEqual(set(triggers), {"workflow_dispatch"})
         west = yaml.safe_load((ROOT / "config/west.yml").read_text())
