@@ -50,5 +50,8 @@ class ConfigTests(unittest.TestCase):
                                 "KP_ENTER", "KP_N0", "KP_DOT", "KP_PLUS"])
         board = (ROOT / "boards/eyelash/eyelash_numpad/eyelash_numpad_nrf52832.dts").read_text()
         self.assertEqual(board.count("<&key_physical_attrs"), 16)
+        chosen = board.split("chosen {", 1)[1].split("};", 1)[0]
+        self.assertNotIn("zmk,matrix-transform", chosen)
+        self.assertIn("zmk,physical-layout", chosen)
         self.assertIn("&studio_unlock", text)
         self.assertIn("&eyelash_dfu", text)
