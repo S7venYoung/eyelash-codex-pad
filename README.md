@@ -2,7 +2,7 @@
 
 nRF52832 的 16 键纯蓝牙数字小键盘。保留原 RMK 默认层键位，接入 DYA 动态改键、运行时宏、Tap Dance、Combo 和蓝牙 DFU。编码器、轨迹球、鼠标输入处理器及显示模块不接入。
 
-**状态：源码适配和主机检查已完成；尚未交叉编译、运行 Actions 或实机验证。284 KiB 应用 Flash 和 64 KiB RAM 是否足够，必须由首次构建确认。仓库内不提供可刷的合成测试固件。**
+**状态：2026-11-02 Actions 41372417099 全部成功（固件提交 daf7d73f3bd731ac38f2daa18c6d9f84314ac412）。18 项主机检查、ZMK、Bootloader 和打包通过。应用 Flash 225,344 / 290,816 字节，RAM 62,920 / 65,536 字节。产物已复核；尚未刷写或实机验证。测试生成的合成镜像不能当作固件使用。**
 
 ## 键位与 DYA
 
@@ -55,7 +55,7 @@ DYA 分支为 cormoran 的 `main+dya` 固定提交；不把它表述为官方 ZM
 
 S132 仅供 Bootloader 蓝牙 DFU 使用，ZMK 运行时使用 Zephyr BLE 栈。固定 SoftDevice 的信息结构为 size=0x26000、FWID=0x00B7。应用大小超限时必须让构建/打包失败，不可覆盖设置区。
 
-启用 LTO 和大小优化，关闭日志和无关硬件，限制蓝牙发送缓冲池。没有未经编译就声称“已适合 64 KiB RAM”。
+启用 LTO 和大小优化，关闭日志和无关硬件，限制蓝牙发送缓冲池。实际链接已通过，但 RAM 仅剩 2,616 字节静态余量；线程栈峰值、DYA 操作和蓝牙 DFU 仍需实机验证。
 
 ## 蓝牙 DFU
 
@@ -80,11 +80,12 @@ S132 仅供 Bootloader 蓝牙 DFU 使用，ZMK 运行时使用 Zephyr BLE 栈。
 - bootloader/eyelash.patch：加入矩阵恢复入口，移除 nRF52832 的默认 UART 下载等待，关闭无 LED 时的 PWM 更新，保留未知的复位脚映射。默认应用无效回退到 OTA 的逻辑沿用上游。
 - 自带 ZMK DFU behavior：写入 GPREGRET=0xA8 后直接复位，避免通用 reboot 路径覆盖请求值。入口约定也见开源 [Blueboot](https://github.com/te9no/zmk-feature-blueboot)，本项目不依赖其模块。
 - scripts/prepare_zmk.py：仅对固定 DYA 源码应用 BLE Studio 修正，以 ATT MTU−3 限制 GATT indication，最大块 128 字节，避免用链路层长度推算而超出 ATT 限制。相关上游实现见 [BLE Studio 修正](https://github.com/cormoran/zmk/commit/494711c183e54de88a81b0cde111ce5acfd526e0)。源文件有其他变动时拒绝覆盖。
+- scripts/prepare_custom_settings.py：对固定 Custom Settings 版本将约束元数据改为逐项 protobuf 回调编码，移除响应/通知中重复的约 7 KiB 内联元数据数组；字段号与线上协议不变，不缩减 8 个宏、8 个 Tap Dance 和 8 个 Combo 的容量。低优先级栈为流式回调预留 3072 字节。
 - scripts/firmware_artifacts.py：拒绝越界 HEX、错误向量、错误 S132/UICR、非应用 OTA，复核真实打包工具输出的二进制和 CRC16。
 
 ## 构建和产物
 
-工作流 **Build Eyelash DYA ZMK and BLE DFU** 仅支持 workflow_dispatch。推送、开 PR 都不会由本分支工作流自动构建。本次未触发它。
+工作流 **Build Eyelash DYA ZMK and BLE DFU** 仅支持 workflow_dispatch。推送、开 PR 都不会由本分支工作流自动构建。已通过的构建见 [Actions 41372417099](https://github.com/S7venYoung/eyelash-codex-pad/actions/runs/41372417099)。
 
 手动构建依次执行主机检查、DYA ZMK/Bootloader 编译、地址和升级包检查。下载最终 artifact `eyelash-numpad-zmk-swd-and-ble-dfu`：
 
@@ -111,7 +112,7 @@ PATH="$PWD/.venv/bin:$PATH" .venv/bin/python -m unittest discover -s tests -v
 python3 scripts/prepare_bootloader.py
 ```
 
-编译 Bootloader 需 ARM GNU 工具链，命令为 `bash scripts/build_bootloader.sh`。ZMK 构建需先运行 `python3 scripts/prepare_zmk.py zmk`，并传入 `-DZMK_EXTRA_MODULES=<本仓库绝对路径>`；本仓库 Zephyr module 注册板级和 DFU behavior。
+编译 Bootloader 需 ARM GNU 工具链，命令为 `bash scripts/build_bootloader.sh`。ZMK 构建需先运行 `python3 scripts/prepare_zmk.py zmk` 和 `python3 scripts/prepare_custom_settings.py zmk-feature-custom-settings`，并传入 `-DZMK_EXTRA_MODULES=<本仓库绝对路径>`；本仓库 Zephyr module 注册板级和 DFU behavior。
 
 ## 首次从 RMK 迁移
 
@@ -134,4 +135,4 @@ nrfjprog -f NRF52 --reset
 
 ## 证据边界
 
-主机测试验证地址检查、真实 DFU 工具的合成升级包、恢复 GPIO 逻辑、MTU 修正和配置一致性。它们不证明实际固件能编译、内存足够、实物矩阵接线正确或蓝牙更新成功。上述项目仍需构建与实机验收。
+主机测试验证地址检查、真实 DFU 工具的合成升级包、恢复 GPIO 逻辑、MTU 修正和配置一致性。Actions 已另外证明固件可编译、静态内存分配未超限、最终升级包通过镜像检查。实物矩阵接线、运行时栈峰值、蓝牙重连、DYA 编辑持久化和蓝牙更新仍需实机验收。
