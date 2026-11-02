@@ -60,12 +60,13 @@ jobs:
           -DZMK_CONFIG="$(pwd)/config"
           -DZMK_EXTRA_MODULES="$(pwd)"
       - name: Collect application and build evidence
+        if: always()
         run: |
           mkdir -p dist/app dist/build-evidence
-          cp build/eyelash/zephyr/zmk.hex dist/app/eyelash-numpad-zmk.hex
-          cp build/eyelash/zephyr/zmk.elf dist/build-evidence/
-          cp build/eyelash/zephyr/.config dist/build-evidence/zephyr.config
-          cp build/eyelash/zephyr/zephyr.dts dist/build-evidence/
+          if [ -f build/eyelash/zephyr/zmk.hex ]; then cp build/eyelash/zephyr/zmk.hex dist/app/eyelash-numpad-zmk.hex; fi
+          if [ -f build/eyelash/zephyr/zmk.elf ]; then cp build/eyelash/zephyr/zmk.elf dist/build-evidence/; fi
+          if [ -f build/eyelash/zephyr/.config ]; then cp build/eyelash/zephyr/.config dist/build-evidence/zephyr.config; fi
+          if [ -f build/eyelash/zephyr/zephyr.dts ]; then cp build/eyelash/zephyr/zephyr.dts dist/build-evidence/; fi
           find build/eyelash/zephyr -maxdepth 1 -name '*.map' -exec cp {} dist/build-evidence/ \;
       - uses: actions/upload-artifact@v4
         with:
@@ -73,6 +74,7 @@ jobs:
           path: dist/app/
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: eyelash-numpad-build-evidence
           path: dist/build-evidence/
