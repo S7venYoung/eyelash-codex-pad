@@ -53,7 +53,9 @@ jobs:
             zmk-module-*/
           key: eyelash-west-v1-${{ hashFiles('config/west.yml') }}
       - name: Apply checked BLE Studio fix
-        run: python3 scripts/prepare_zmk.py zmk
+        run: |
+          python3 scripts/prepare_zmk.py zmk
+          python3 scripts/prepare_custom_settings.py zmk-feature-custom-settings
       - name: Build nRF52832 DYA application
         run: >-
           west build -s zmk/app -d build/eyelash -b eyelash_numpad/nrf52832 --
